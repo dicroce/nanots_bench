@@ -3,7 +3,9 @@
 A reproducible benchmark harness for comparing [nanots](https://github.com/dicroce/nanots)
 against embedded databases on time-series workloads.
 
-**v1 status:** Both SQLite and nanots backends are fully implemented and produce real numbers.
+**v1 status:** nanots, SQLite, and RocksDB backends are fully implemented and produce real numbers.
+
+> **[Benchmark Results →](RESULTS.md)**
 
 ---
 
@@ -13,7 +15,8 @@ against embedded databases on time-series workloads.
 
 - CMake ≥ 3.16
 - C++17 compiler (GCC 9+, Clang 10+, MSVC 2019+)
-- No external dependencies — SQLite is vendored in `third_party/sqlite/`
+- Internet access at configure time — RocksDB is fetched via `FetchContent` (pinned to v9.7.3)
+- SQLite is vendored in `third_party/sqlite/` (no download required)
 
 ### Build
 
@@ -211,7 +214,7 @@ larger blocks (axis B), the numbers improve substantially.
 
 ## Adding a New Backend
 
-Adding DuckDB, RocksDB, LMDB, or any other engine is three steps:
+Adding DuckDB, LMDB, or any other engine is three steps:
 
 ### Step 1 — Vendor the dependency
 
@@ -297,9 +300,11 @@ The SQLite amalgamation version is pinned in `third_party/sqlite/VERSION`.
 
 ## Pinned versions
 
-| Component | Version  | Location                   |
-|-----------|----------|----------------------------|
-| SQLite    | 3.45.3   | `third_party/sqlite/`      |
+| Component | Version  | Location                        |
+|-----------|----------|---------------------------------|
+| SQLite    | 3.45.3   | `third_party/sqlite/`           |
+| RocksDB   | v9.7.3   | fetched via FetchContent        |
+| nanots    | submodule | `third_party/nanots/`          |
 
 ---
 
