@@ -25,6 +25,24 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # ---- Defaults ---------------------------------------------------------------
+# Auto-detect the bench binary. Multi-config generators (Visual Studio, Xcode)
+# put it under build/Release/ or build/Debug/; single-config generators put it
+# directly under build/. Prefer Release so Debug builds don't silently skew
+# benchmark numbers.
+if [[ -z "${BENCH:-}" ]]; then
+    for candidate in \
+        "${REPO_ROOT}/build/bench" \
+        "${REPO_ROOT}/build/bench.exe" \
+        "${REPO_ROOT}/build/Release/bench.exe" \
+        "${REPO_ROOT}/build/Release/bench" \
+        "${REPO_ROOT}/build/Debug/bench.exe" \
+        "${REPO_ROOT}/build/Debug/bench"; do
+        if [[ -x "${candidate}" ]]; then
+            BENCH="${candidate}"
+            break
+        fi
+    done
+fi
 BENCH="${BENCH:-${REPO_ROOT}/build/bench}"
 RESULTS_DIR="${REPO_ROOT}/results"
 DATA_DIR="${REPO_ROOT}/bench_data"
@@ -46,9 +64,18 @@ done
 # ---- Sanity checks ----------------------------------------------------------
 if [[ ! -x "${BENCH}" ]]; then
     echo "ERROR: bench binary not found at ${BENCH}"
-    echo "  Build first:  cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j"
+    echo "  Build first:"
+    echo "    Linux/macOS:  cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j"
+    echo "    Windows MSVC: cmake -B build && cmake --build build --config Release -j"
+    echo "  (On multi-config generators like Visual Studio, --config Release is required;"
+    echo "   -DCMAKE_BUILD_TYPE is ignored.)"
     exit 1
 fi
+
+# Warn if we picked up a Debug build — benchmark numbers will be misleading.
+case "${BENCH}" in
+    */Debug/*) echo "WARNING: using Debug build (${BENCH}) — benchmark numbers will not be representative." ;;
+esac
 
 mkdir -p "${RESULTS_DIR}" "${DATA_DIR}"
 
