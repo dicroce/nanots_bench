@@ -3,8 +3,12 @@
 // Phase 1 (prefill): writes PREFILL_FRAMES frames to "stream_0".
 // Phase 2 (seek):    performs |num_frames| random seeks — each seek picks a
 //                    random timestamp from the prefill range and calls
-//                    Iterator::find().  We open a fresh iterator per seek to
-//                    measure the full seek cost including iterator creation.
+//                    Iterator::find().  A single iterator is constructed once
+//                    before the loop and reused across all seeks; this measures
+//                    steady-state seek throughput with whatever internal caches
+//                    the backend's iterator maintains (e.g. nanots's per-iterator
+//                    block cache, sqlite's prepared statement, rocksdb's block
+//                    cache via the open iterator).
 //
 // Metrics reported:
 //   • Per-seek latency histogram (p50/p95/p99/max/mean)
